@@ -1,25 +1,13 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import sqlite3
+import os
+from database import get_db, init_db
 
 app = Flask(__name__)
 CORS(app)
-DATABASE = 'blog.db'
 
-def get_db():
-    conn = sqlite3.connect(DATABASE)
-    print(conn)
-    return conn
-
-with get_db() as conn:
-        cur = conn.cursor()
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS posts (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title TEXT NOT NULL,
-                content TEXT NOT NULL
-            )
-        """)
+init_db()
 
 @app.route('/posts', methods=['GET'])
 def get_posts():
@@ -27,7 +15,7 @@ def get_posts():
     cur = conn.cursor()
     cur.execute("SELECT id, title, content FROM posts ORDER BY id DESC")
     posts = cur.fetchall()
-    return jsonify(posts)
+    return jsonify([dict(row) for row in posts])
 
 @app.route('/add', methods=['POST'])
 def add_post():
